@@ -476,6 +476,14 @@ TCHAR pressAnyKey(const TCHAR* prompt = nullptr)
 	return ch;
 }
 
+void resizeConsole(int width, int height) 
+{
+    HWND console = GetConsoleWindow();
+    RECT r;
+    GetWindowRect(console, &r);
+    MoveWindow(console, r.left, r.top, width, height, true);
+}
+
 void cls()
 {
 	static HANDLE console_handle = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -583,7 +591,8 @@ int main()
 {   
 	SetConsoleCP(437);
 	SetConsoleOutputCP(437);
-    
+    resizeConsole(990, 510);
+
     std::ifstream input("best_score.txt");
     High_score scores[1000];
     int len = 0;
