@@ -137,8 +137,8 @@ public:
 		{
 			gotoxy(static_cast<short>(snake[i].x), static_cast<short>(snake[i].y));
 			if (i == 0)
-				std::cout << Color(225) << ' ';
-			else std::cout << Color(165) << ' ';
+				std::cout << Color(225) << "  ";
+			else std::cout << Color(165) << "  ";
 		}
         gotoxy(snake[snake_length-1].pre_x, snake[snake_length-1].pre_y);
         // std::cout << ' ';
@@ -152,11 +152,11 @@ public:
 	int x;
 	int y;
 	int type;
-	
+
 	void make_food()
 	{
         srand(unsigned (time(NULL)));
-        x = rand() % 60 + 1;
+        x = rand() % 58 + 2;
         y = rand() % 20 + 1;
 
 		if (count_phase % 5 == 0)
@@ -212,7 +212,7 @@ public:
 	void draw() const
 	{
 		gotoxy(static_cast<short>(x), static_cast<short>(y));
-		std::cout << Color(195) << ' ' << Color(7);
+		std::cout << Color(195) << "  " << Color(7);
 		gotoxy(0, 0);
 	}
 };
@@ -226,7 +226,7 @@ public:
 
 	void make_portal()
 	{
-        x = rand() % 60 + 1;
+        x = rand() % 59 + 1;
         y = rand() % 20 + 1;
 	}
 
@@ -279,10 +279,10 @@ public:
 		for (int row = 1; row <= 21; row++)
 		{
 			gotoxy(0, row);
-			std::cout << Color(225) << ' ';
+			std::cout << Color(225) << "  ";
 
-			gotoxy(61, row);
-			std::cout << Color(225) << ' ';
+			gotoxy(60, row);
+			std::cout << Color(225) << "  ";
 		}
 
 		gotoxy(0, 22);
@@ -301,7 +301,7 @@ bool game_over(const SNAKE s, std::string& reason)
 	}
 
 	/* snake hit the wall */
-	if (s.snake[0].x > 60 || s.snake[0].x < 1 || s.snake[0].y > 21 || s.snake[0].y < 2)
+	if (s.snake[0].x >= 59 || s.snake[0].x <= 1 || s.snake[0].y > 21 || s.snake[0].y < 2)
 	{
 		reason = "You hit the wall! Game over!";
 		return true;
@@ -320,7 +320,7 @@ bool game_over(const SNAKE s, std::string& reason)
 
 void eat_food(SNAKE& s, FOOD& fruit)
 {
-	if (s.snake[0].x == fruit.x && s.snake[0].y == fruit.y)
+    if ((abs(s.snake[0].x - fruit.x) <= 1) && s.snake[0].y == fruit.y)
 	{
 		s.snake[s.snake_length].x = s.snake[s.snake_length - 1].x;
 		s.snake[s.snake_length].y = s.snake[s.snake_length - 1].y;
@@ -476,7 +476,7 @@ TCHAR pressAnyKey(const TCHAR* prompt = nullptr)
 	return ch;
 }
 
-void resizeConsole(int width, int height) 
+void resizeConsole(int width, int height)
 {
     HWND console = GetConsoleWindow();
     RECT r;
@@ -514,7 +514,7 @@ int min(int a, int b) {
 
 std::string convert_to_string(int x) {
     std::string temp = "";
-    while (x) 
+    while (x)
     {
         temp += " ";
         x /= 10;
@@ -527,7 +527,7 @@ void print_line(std::string rank, int color, High_score x) {
     std::cout << Color(color);
     std::string temp = "| " + rank + ". " + x.user_name;
     std::cout << temp;
-    while (int(temp.size()) < 15) 
+    while (int(temp.size()) < 15)
     {
         temp += " ";
         std::cout << " ";
@@ -537,7 +537,7 @@ void print_line(std::string rank, int color, High_score x) {
     else std::cout << "|" << x.score;
 
     temp += convert_to_string(x.score);
-    while (int(temp.size()) < 22) 
+    while (int(temp.size()) < 22)
     {
         temp += " ";
         std::cout << " ";
@@ -580,7 +580,7 @@ void draw_score_board(High_score scores[], int len) {
 
     std::cout << Color(7);
     gotoxy(70, 20);
-    std::cout << "YOUR SCORE: " << player_score;    
+    std::cout << "YOUR SCORE: " << player_score;
 }
 
 bool cmp_score(High_score a, High_score b) {
@@ -588,7 +588,7 @@ bool cmp_score(High_score a, High_score b) {
 }
 
 int main()
-{   
+{
 	SetConsoleCP(437);
 	SetConsoleOutputCP(437);
     resizeConsole(990, 510);
@@ -596,7 +596,7 @@ int main()
     std::ifstream input("best_score.txt");
     High_score scores[1000];
     int len = 0;
-    while (1) 
+    while (1)
     {
         input >> scores[len].user_name >> scores[len++].score;
         if (input.eof()) break;
@@ -608,8 +608,8 @@ REPLAY:
 	{
         std::sort(scores, scores + len, cmp_score);
         for (int i = 0; i < len; i++)
-            output << scores[i].user_name << " " << scores[i].score << "\n"; 
-            
+            output << scores[i].user_name << " " << scores[i].score << "\n";
+
 		restart();
 		game_level();
 		cls();
@@ -703,7 +703,7 @@ REPLAY:
 			gotoxy(0, 0);
 			std::cout << "Game level: " << game_level;
             std::cout << Color(45);
-            for (int i = 10; i < 59 ; i++) std::cout << ' '; 
+            for (int i = 10; i < 59 ; i++) std::cout << ' ';
             std::cout << Color(15) << "\n";
 
 			snake.move(direct);
@@ -735,7 +735,7 @@ REPLAY:
 		std::cout << reason << '\n';
 	}
 
-    if (player_score > scores[5].score) 
+    if (player_score > scores[5].score)
     {
         std::string name;
         std::cout << "Congrats! You got a new high score! Enter your name to record this score: ";
@@ -745,7 +745,7 @@ REPLAY:
     }
     std::sort(scores, scores + len, cmp_score);
     for (int i = 0; i < len; i++)
-        output << scores[i].user_name << " " << scores[i].score << "\n"; 
+        output << scores[i].user_name << " " << scores[i].score << "\n";
 
 	std::cout << "Press 'r' to replay or 'Esc' to exit...";
 
