@@ -131,17 +131,20 @@ public:
 		*/
 	}
 
-	void draw() const
+	void draw(char d) const
 	{
 		for (int i = 0; i < snake_length; i++)
 		{
 			gotoxy(static_cast<short>(snake[i].x), static_cast<short>(snake[i].y));
 			if (i == 0)
-				std::cout << Color(225) << "  ";
+            {
+                if (d == 'a') gotoxy(static_cast<short>(snake[i].x - 1), static_cast<short>(snake[i].y));
+                std::cout << Color(225) << "  ";
+				if (d == 'd') std::cout << " ";
+            }
 			else std::cout << Color(165) << "  ";
 		}
         gotoxy(snake[snake_length-1].pre_x, snake[snake_length-1].pre_y);
-        // std::cout << ' ';
 		std::cout << Color(7);
 	}
 };
@@ -297,6 +300,9 @@ bool game_over(const SNAKE s, std::string& reason)
 	if (dead_by_multiuniverse)
 	{
 		reason = "Oh no! Your tail is teleported to another universe, you're shocked to dead!";
+		dead_by_multiuniverse = false;
+		is_going_through_portal = false;
+        first_step = false;
 		return true;
 	}
 
@@ -682,7 +688,7 @@ REPLAY:
 
 					cls();
 					board.draw();
-					snake.draw();
+					snake.draw(direct);
 					fruit.draw();
 					gotoxy(0, 24);
 					pressAnyKey(TEXT("Use a | w | d | s to move around, x to pause"));
@@ -707,7 +713,7 @@ REPLAY:
             std::cout << Color(15) << "\n";
 
 			snake.move(direct);
-			snake.draw();
+			snake.draw(direct);
 			board.draw();
 			fruit.draw();
             draw_score_board(scores, len);
