@@ -58,6 +58,7 @@ struct High_score
 
 bool is_going_through_portal;
 bool first_step;
+Point prevTail;
 
 class SNAKE
 {
@@ -131,8 +132,26 @@ public:
 		*/
 	}
 
-	void draw(char d) const
+	void draw(char d, char prevD, bool first_draw) const
 	{
+	    if (!first_draw)
+        {
+            if (d == 'w' || d == 's')
+            {
+                if (prevD == 'a') gotoxy(static_cast<short>(snake[0].pre_x - 1), static_cast<short>(snake[0].pre_y));
+                if (prevD == 'd') gotoxy(static_cast<short>(snake[0].pre_x + 2), static_cast<short>(snake[0].pre_y));
+                std::cout << Color(0) << " ";
+            }
+
+            gotoxy(static_cast<short>(snake[0].x), static_cast<short>(snake[0].y));
+            if (d == 'a') gotoxy(static_cast<short>(snake[0].x - 1), static_cast<short>(snake[0].y));
+            std::cout << Color(225) << "  ";
+            if (d == 'd') std::cout << " ";
+
+            gotoxy(static_cast<short>(snake[snake_length-1].pre_x), static_cast<short>(snake[snake_length-1].pre_y));
+            std::cout << Color(0) << "  ";
+        }
+
 		for (int i = 0; i < snake_length; i++)
 		{
 			gotoxy(static_cast<short>(snake[i].x), static_cast<short>(snake[i].y));
@@ -159,7 +178,7 @@ public:
 	void make_food()
 	{
         srand(unsigned (time(NULL)));
-        x = rand() % 58 + 2;
+        x = rand() % 78 + 2;
         y = rand() % 20 + 1;
 
 		if (count_phase % 5 == 0)
@@ -192,7 +211,7 @@ public:
 	bool is_able(const SNAKE s) const
 	{
 		/* fruit can't be on the edges of the board */
-		if (x == 0 || x == 60 || y == 1 || y == 22)
+		if (x == 0 || x == 80 || y == 1 || y == 22)
 			return false;
 
 		/* fruit can't be in the snake */
@@ -229,13 +248,13 @@ public:
 
 	void make_portal()
 	{
-        x = rand() % 59 + 1;
+        x = rand() % 79 + 1;
         y = rand() % 20 + 1;
 	}
 
 	bool is_able(const SNAKE s, const FOOD f, const PORTAL p) const
 	{
-		if (x == 0 || x == 60 || y == 1 || y == 22)
+		if (x == 0 || x == 80 || y == 1 || y == 22)
 			return false;
 
 		for (int i = 0; i < s.snake_length; i++)
@@ -275,7 +294,7 @@ public:
 	void draw()
 	{
 		gotoxy(0, 1);
-		for (int i = 0; i <= 61; i++)
+		for (int i = 0; i <= 81; i++)
 			std::cout << Color(225) << ' ';
 		std::cout << '\n';
 
@@ -284,12 +303,12 @@ public:
 			gotoxy(0, row);
 			std::cout << Color(225) << "  ";
 
-			gotoxy(60, row);
+			gotoxy(80, row);
 			std::cout << Color(225) << "  ";
 		}
 
 		gotoxy(0, 22);
-		for (int i = 0; i <= 61; i++)
+		for (int i = 0; i <= 81; i++)
 			std::cout << Color(225) << ' ';
 	}
 };
@@ -307,7 +326,7 @@ bool game_over(const SNAKE s, std::string& reason)
 	}
 
 	/* snake hit the wall */
-	if (s.snake[0].x >= 59 || s.snake[0].x <= 1 || s.snake[0].y > 21 || s.snake[0].y < 2)
+	if (s.snake[0].x >= 79 || s.snake[0].x < 1 || s.snake[0].y >= 21 || s.snake[0].y < 1)
 	{
 		reason = "You hit the wall! Game over!";
 		return true;
@@ -324,6 +343,21 @@ bool game_over(const SNAKE s, std::string& reason)
 	return false;
 }
 
+void delete_fruit(FOOD f) {
+    gotoxy(static_cast<short>(f.x), static_cast<short>(f.y));
+    std::cout << Color(0) << " ";
+}
+
+int length(int x) {
+    int result = 0;
+    while (x)
+    {
+        result++;
+        x /= 10;
+    }
+    return result;
+}
+
 void eat_food(SNAKE& s, FOOD& fruit)
 {
     if ((abs(s.snake[0].x - fruit.x) <= 1) && s.snake[0].y == fruit.y)
@@ -333,8 +367,14 @@ void eat_food(SNAKE& s, FOOD& fruit)
 		s.snake_length++;
 		player_score += base_score;
 		count_phase++;
+        delete_fruit(fruit);
 		fruit.init(s);
 		fruit.draw();
+		gotoxy(82, 6);
+		std::cout << Color(63);
+        std::cout << "        SCORE:        " << player_score;
+        for (int i = 0; i < 29 - length(player_score); i++)
+            std::cout << " ";
 	}
 }
 
@@ -421,11 +461,18 @@ char curr_direct(const SNAKE s)
 	return 'a';
 }
 
+void delete_portal(PORTAL p) {
+    gotoxy(static_cast<short>(p.x), static_cast<short>(p.y));
+    std::cout << Color(0) << " ";
+}
+
 void try_make_portal()
 {
+    delete_portal(portal1);
+    delete_portal(portal2);
 	portal1.init(snake, fruit, portal2);
 	portal2.init(snake, fruit, portal1);
-	time_left_for_portal_to_disappear = 50;
+	time_left_for_portal_to_disappear = 100;
 	portal_is_opening = true;
 }
 
@@ -462,7 +509,7 @@ TCHAR pressAnyKey(const TCHAR* prompt = nullptr)
 	DWORD count;
 	const HANDLE console_handle = GetStdHandle(STD_INPUT_HANDLE);
 
-	if (prompt == nullptr) prompt = TEXT("Paused! Press any key to continue playing...");
+	if (prompt == nullptr) prompt = TEXT("Paused! Press any key to continue playing... But rest for a while maybe really good for your eyes");
 	WriteConsole(
 		GetStdHandle(STD_OUTPUT_HANDLE),
 		prompt,
@@ -552,52 +599,130 @@ void print_line(std::string rank, int color, High_score x) {
     std::cout << "|";
 }
 
+void print_player(High_score x, std::string rank, int colour) {
+    std::cout << Color(colour);
+    std::cout << " " << rank << " " << x.user_name << "(" << x.score << ")";
+}
+
 void draw_score_board(High_score scores[], int len) {
-    gotoxy(70, 3);
-    std::cout << "TUTORIAL:";
-    gotoxy(70, 4);
-    std::cout << "1. Use a | w | d | s to move around.";
-    gotoxy(70, 5);
-    std::cout << "2. Press X to pause, R to restart.";
-    gotoxy(70, 6);
-    std::cout << "3. Portals will be helpful if be used it cleverly!";
-    gotoxy(70, 7);
-    std::cout << "4. The longer you are, the more score you'll get.";
+    gotoxy(82, 0);
+    std::cout << Color(240) << "        TUTORIAL                                   ";
+    gotoxy(82, 1);
+    std::cout << " 1. Use a | w | d | s to move around.              ";
+    gotoxy(82, 2);
+    std::cout << " 2. Press X to pause, R to restart.                ";
+    gotoxy(82, 3);
+    std::cout << " 3. Portals will be helpful if be used it cleverly!";
+    gotoxy(82, 4);
+    std::cout << " 4. The longer you are, the more score you'll get. ";
 
-    std::cout << Color(10);
-    gotoxy(90, 10);
-    std::cout << "+--------------+------+";
-    gotoxy(90, 11);
-    std::cout << "|  HIGH SCORE  |      |";
-    gotoxy(90, 12);
-    std::cout << "+--------------+------+";
-    gotoxy(90, 13);
-    print_line("1st", 12, scores[0]);
-    gotoxy(90, 14);
-    print_line("2nd", 13, scores[1]);
-    gotoxy(90, 15);
-    print_line("3rd", 14, scores[2]);
-    gotoxy(90, 16);
-    print_line("4th", 10, scores[3]);
-    gotoxy(90, 17);
-    print_line("5th", 10, scores[4]);
-    gotoxy(90, 18);
-    std::cout << "+--------------+------+";
+    std::cout << Color(240);
+    gotoxy(82, 5);
+    std::cout << "                                                   ";
+    std::cout << Color(112);
+    gotoxy(82, 6);
+    std::cout << "        SCORE:        " << player_score;
+    for (int i = 0; i < 29 - length(player_score); i++)
+        std::cout << " ";
+    gotoxy(82, 7);
+    std::cout << Color(240);
+    std::cout << "                                                   ";
 
-    std::cout << Color(7);
-    gotoxy(70, 20);
-    std::cout << "YOUR SCORE: " << player_score;
+    std::cout << Color(112);
+    gotoxy(82, 8);
+    std::cout << "        TOP PLAYERS                                ";
+    std::cout << Color(44);
+    gotoxy(82, 9);
+    std::cout << "                                                   ";
+    gotoxy(82, 9);
+    print_player(scores[0], "1st.", 44);
+    gotoxy(82, 10);
+    std::cout << "                                                   ";
+    gotoxy(82, 10);
+    print_player(scores[1], "2nd.", 45);
+    gotoxy(82, 11);
+    std::cout << "                                                   ";
+    gotoxy(82, 11);
+    print_player(scores[2], "3rd.", 46);
+    gotoxy(82, 12);
+    std::cout << "                                                   ";
+    gotoxy(82, 12);
+    print_player(scores[3], "4th.", 47);
+    gotoxy(82, 13);
+    std::cout << "                                                   ";
+    gotoxy(82, 13);
+    print_player(scores[4], "5th.", 47);
+
+    int x = 1, colour;
+    for (int j = 0; j < 50; j += 2)
+    {
+        x *= -1;
+        for (int i = 14; i < 22; i++)
+        {
+            x *= -1;
+            if (x == 1) colour = 240;
+            else colour = 112;
+
+            gotoxy(82 + j, i);
+            std::cout << Color(colour) << "  ";
+        }
+    }
+    for (int i = 14; i < 22; i++)
+    {
+        x *= -1;
+        if (x == 1) colour = 112;
+        else colour = 240;
+
+        gotoxy(82 + 50, i);
+        std::cout << Color(colour) << " ";
+    }
+
+    gotoxy(0, 21);
+    std::cout << Color(45);
+    for (int i = 0; i < 133; i++)
+        std::cout << " ";
+
+    for (int i = 22; i < 26; i++)
+    {
+        gotoxy(0, i);
+        std::cout << "  ";
+    }
+
+    gotoxy(0, 26);
+    std::cout << Color(170);
+    for (int i = 0; i < 133; i++)
+        std::cout << " ";
 }
 
 bool cmp_score(High_score a, High_score b) {
     return a.score > b.score || a.score == b.score && a.user_name < b.user_name;
 }
 
+void move_through_portal_check(SNAKE s, char prevD) {
+    if (is_going_through_portal)
+            {
+                if (prevD == 'a')
+                {
+                    gotoxy(static_cast<short>(portal1.x - 2), static_cast<short>(portal1.y));
+                    std::cout << Color(0) << "   ";
+                    gotoxy(static_cast<short>(portal2.x - 2), static_cast<short>(portal2.y));
+                    std::cout << Color(0) << "   ";
+                }
+                if (prevD == 'd')
+                {
+                    gotoxy(static_cast<short>(portal1.x + 1), static_cast<short>(portal1.y));
+                    std::cout << Color(0) << "   ";
+                    gotoxy(static_cast<short>(portal2.x + 1), static_cast<short>(portal2.y));
+                    std::cout << Color(0) << "   ";
+                }
+            }
+}
+
 int main()
 {
 	SetConsoleCP(437);
 	SetConsoleOutputCP(437);
-    resizeConsole(990, 510);
+    resizeConsole(990, 470);
 
     std::ifstream input("best_score.txt");
     High_score scores[1000];
@@ -619,6 +744,7 @@ REPLAY:
 		restart();
 		game_level();
 		cls();
+        draw_score_board(scores, len);
 
 		if (end_game)
 		{
@@ -638,6 +764,7 @@ REPLAY:
 
 		snake.init();
 		fruit.init(snake);
+        snake.draw(direct, pre_direct, 1);
 
 		while (!game_over(snake, reason))
 		{
@@ -686,14 +813,13 @@ REPLAY:
 					std::cout << Color(7);
 					Sleep(100);
 
-					cls();
-					board.draw();
-					snake.draw(direct);
+					// cls();
+					snake.draw(direct, pre_direct, 0);
 					fruit.draw();
 					gotoxy(0, 24);
 					pressAnyKey(TEXT("Use a | w | d | s to move around, x to pause"));
 					start = false;
-					cls();
+					// cls();
 				}
 				else
 				{
@@ -705,19 +831,33 @@ REPLAY:
 				std::cout << "                                            ";
 				continue;
 			}
-			system("cls");
+			// cls();
 			gotoxy(0, 0);
-			std::cout << "Game level: " << game_level;
+			std::cout << "GAME LEVEL: " << game_level;
             std::cout << Color(45);
-            for (int i = 10; i < 59 ; i++) std::cout << ' ';
-            std::cout << Color(15) << "\n";
-
+            for (int i = 10; i < 79 ; i++) std::cout << ' ';
 			snake.move(direct);
-			snake.draw(direct);
-			board.draw();
+			snake.draw(direct, pre_direct, 0);
+			move_through_portal_check(snake, direct);
+			//board.draw();
 			fruit.draw();
-            draw_score_board(scores, len);
 			eat_food(snake, fruit);
+
+            std::string whisper = "";
+            if (player_score == 0) whisper = "Let's start!                                                                                              ";
+            else if (player_score < 100) whisper = "Wooh! You are getting well!                                                                                                        ";
+            else if (player_score < 150) whisper = "You are doing really well! Keep going my friend!                                                    ";
+            else if (player_score < 300) whisper = "Haha! New high score is comminggg!                                                                  ";
+            else if (player_score < 400) whisper = "Damn! Really ?!                                                                                     ";
+            else if (player_score < 500) whisper = "Are you still hungry ?                                                                              ";
+            else if (player_score < 530) whisper = "Stop! You have eaten too much!                                                                      ";
+            else if (player_score < 600) whisper = "No, god, please, no,                                                                                ";
+            else if (player_score < 700) whisper = "Ha~ I really care about your eyes :(                                                                ";
+            else if (player_score < 800) whisper = "Fine. You win, let's stop.                                                                          ";
+            else                         whisper = "Will you stop for me :(?                                                                            ";
+
+            gotoxy(0, 24);
+            std::cout << Color(45) << "  " <<  Color(10) << whisper;
 
 			if (time_left_for_portal_to_disappear > 0 && !go_to_portal(portal1, portal2))
 				go_to_portal(portal2, portal1);
@@ -733,11 +873,11 @@ REPLAY:
 				portal2.draw();
 			}
 
-			if (!portal_is_opening && rand() % 20 == 1)
+			if (!portal_is_opening && rand() % 25 == 1)
 				try_make_portal();
 			Sleep(100);
 		}
-		gotoxy(0, 25);
+		gotoxy(0, 24);
 		std::cout << reason << '\n';
 	}
 
